@@ -10,6 +10,9 @@ public class Goblin : BaseEnemy
     }
     private void Update()
     {
-        StandPatrol();
+        CheckForObstacles();
+        UpdateAnimations();
+        SetSpriteDirection(Direction);
+        MoveStandPatrol();
     }
 }

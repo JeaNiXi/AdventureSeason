@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: Goblin
   m_EditorClassIdentifier: 
   _name: Goblin Searcher
+  _moveSpeed: 4
+  _isStandingStill: 0
   _canStandPartol: 1
   _partolStandingTime: 2
