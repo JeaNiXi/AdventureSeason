@@ -1921,8 +1921,8 @@ MonoBehaviour:
   rightHoleCubePosition: {x: 2.56, y: -1.8}
   leftHoleCubeSize: {x: 2, y: 4, z: 0}
   leftHoleCubePosition: {x: -2.56, y: -1.8}
-  groundCheckSize: {x: 1.5, y: 0.4, z: 0}
-  groundCheckPosition: {x: 0, y: -0.1}
+  groundCheckSize: {x: 0.6, y: 0.3, z: 0}
+  groundCheckPosition: {x: 0.11, y: -0.1}
 --- !u!70 &1805687329
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

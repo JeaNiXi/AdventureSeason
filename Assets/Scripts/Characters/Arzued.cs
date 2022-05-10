@@ -6,7 +6,7 @@ public class Arzued : MonoBehaviour
 {
     // Adding basic connections.
     Rigidbody2D ArzuedRigidbody2D;
-    BoxCollider2D ArzuedBoxCollider2D;
+
     ArzuedAnimations ArzuedAnimationScript;
     ArzuedCollisions ArzuedCollisionsScript;
 
@@ -241,7 +241,7 @@ public class Arzued : MonoBehaviour
     private void Initialize()
     {
         ArzuedRigidbody2D = gameObject.GetComponent<Rigidbody2D>();
-        ArzuedBoxCollider2D = gameObject.GetComponent<BoxCollider2D>();
+
         ArzuedAnimationScript = gameObject.GetComponentInChildren<ArzuedAnimations>();
         ArzuedCollisionsScript = gameObject.GetComponent<ArzuedCollisions>();
         InitSO();

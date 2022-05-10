@@ -21,6 +21,8 @@ public class BaseEnemy : MonoBehaviour
         DISABLED
     }
 
+    Coroutine SearchRoutine;
+
     [SerializeField] private DirectionEnum ObjectDirection;
     [SerializeField] private Movement ObjectMovement = Movement.ALLOWED;
     [SerializeField] private BattleState ObjectBattleState = BattleState.DISABLED;
@@ -113,8 +115,6 @@ public class BaseEnemy : MonoBehaviour
     public float MoveCoefficient { get => _moveCoefficient; set => _moveCoefficient = value; }
 
 
-    [SerializeField] private bool _searchCoroutineRunning;
-
     protected void InitializeObject()
     {
         objRigidBody = gameObject.GetComponent<Rigidbody2D>();
@@ -156,7 +156,7 @@ public class BaseEnemy : MonoBehaviour
     // Behaviour
     protected void MoveStandPatrol()
     {
-        if (ObjectBattleState == BattleState.DISABLED || IsSearching)
+        if (ObjectBattleState == BattleState.DISABLED)
         {
             if (ObjectMovement == Movement.ALLOWED && objObstaclesDetectionScript.IsGrounded)
             {
@@ -213,16 +213,27 @@ public class BaseEnemy : MonoBehaviour
     {
         RaycastHit2D rayHit = Physics2D.Linecast(FOVCastPoint.transform.position, new Vector2(FOVCastPoint.transform.position.x+_viewDistance, FOVCastPoint.transform.position.y), playerLayer);
        // if ((rayHit.collider != null && ObjectBattleState==BattleState.DISABLED) || (rayHit.collider != null && IsSearching))
-        if ((rayHit.collider != null && ObjectBattleState==BattleState.DISABLED) || (rayHit.collider != null && IsSearching))
+        if (rayHit.collider != null && ObjectBattleState==BattleState.DISABLED)
         {
             ObjectBattleState = BattleState.ENABLED;
             Debug.Log("Found Player");
-            IsSearching = false;
         }
         if (rayHit.collider == null && ObjectBattleState == BattleState.ENABLED && !IsSearching) 
         {
-            Debug.Log("Lost Player");
+            //ObjectBattleState = BattleState.DISABLED;
+            //MoveCoefficient = 1f;
+            //Debug.Log("Lost Player");
+            Debug.Log("Lost Player, started search.");
             TryFindLostPlayer();
+        }
+        if(rayHit.collider!=null && ObjectBattleState == BattleState.ENABLED && IsSearching)
+        {
+            //if (_searchCoroutineRunning)
+            //{
+                Debug.Log("object found Stopping Coroutine");
+                StopCoroutine(SearchRoutine);
+                FullyStopSearch();
+            //}
         }
     }
 
@@ -239,28 +250,50 @@ public class BaseEnemy : MonoBehaviour
                 CanAttack = false;
                 Attack(); 
             }
-            if (rayAttackHit.collider == null && !IsAttacking && !IsSearching)
+            if (rayAttackHit.collider == null && !IsAttacking)
                 TryCatchPlayer();
             else
+            {
                 return;
+            }
         }
         else
         {
+
             return;
         }
     }
 
     private void TryCatchPlayer()
     {
-        IsMoving = true;
-        MoveCoefficient = 2.5f;
-        objRigidBody.velocity = new Vector2(Direction.x * MoveSpeed * MoveCoefficient, objRigidBody.velocity.y);
+        if (objObstaclesDetectionScript.IsGrounded)
+        {
+            IsMoving = true;
+            MoveCoefficient = 2.5f;
+            objRigidBody.velocity = new Vector2(Direction.x * MoveSpeed * MoveCoefficient, objRigidBody.velocity.y);
+            ChangeDirectionOnSearch();
+        }
+        else
+        {
+            IsMoving = false;
+        }
     }
     private void TryFindLostPlayer()
     {
-        Debug.Log("TryFindLostPlayer Started");
         IsSearching = true;
-        StartCoroutine(SearchCooldown(SearchDuration));
+
+        SearchRoutine = StartCoroutine(SearchCooldown(SearchDuration));
+    }
+    private void ChangeDirectionOnSearch()
+    {
+        if (Hero.transform.position.x - gameObject.transform.position.x >= 2)
+        {
+            ObjectDirection = DirectionEnum.RIGHT;
+        }
+        else if (Hero.transform.position.x - gameObject.transform.position.x <-2)
+        {
+            ObjectDirection = DirectionEnum.LEFT;
+        }
     }
     protected void Attack()
     {
@@ -271,7 +304,12 @@ public class BaseEnemy : MonoBehaviour
             DoAttack1 = true;
         }
     }
-
+    private void FullyStopSearch()
+    {
+        ObjectBattleState = BattleState.DISABLED;
+        IsSearching = false;
+        MoveCoefficient = 1f;
+    }
     //IEnumerators
     IEnumerator WaitTimeSetDirectionAndMoveState(float time, DirectionEnum direction, Movement moveState)
     {
@@ -288,18 +326,10 @@ public class BaseEnemy : MonoBehaviour
     }
     IEnumerator SearchCooldown(float duration)
     {
-        _searchCoroutineRunning = true;
-        Debug.Log("coro Started");
+        Debug.Log("Search Coro Started");
         yield return new WaitForSeconds(duration);
-        if (IsSearching)
-        {
-            IsSearching = false;
-            ObjectBattleState = BattleState.DISABLED;
-            MoveCoefficient = 1f;
-            Debug.Log("coro ended");
-            _searchCoroutineRunning = false;
-        }
-        _searchCoroutineRunning = false;
+        FullyStopSearch();
+        Debug.Log("Search Coro Ended");
         yield break;
     }
     /////// Animations handler.
