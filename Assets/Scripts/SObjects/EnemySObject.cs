@@ -24,4 +24,10 @@ public class EnemySObject : ScriptableObject
 
     [SerializeField] private float _partolStandingTime;
     public float PatrolStandingTime { get => _partolStandingTime; }
+
+    [SerializeField] private float _attackInterval;
+    public float AttackInterval { get => _attackInterval; }
+
+    [SerializeField] private float _searchDuration;
+    public float SearchDuration { get => _searchDuration; }
 }

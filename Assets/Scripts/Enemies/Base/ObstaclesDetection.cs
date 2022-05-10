@@ -12,6 +12,9 @@ public class ObstaclesDetection : MonoBehaviour
     public bool HasObstacleLeft;
     public bool HasObstacleRightUp;
     public bool HasObstacleLeftUp;
+    public bool HasNoHoleRight;
+    public bool HasNoHoleLeft;
+    public bool IsGrounded;
 
     [Space]
     [Header("Collisions")]
@@ -26,7 +29,13 @@ public class ObstaclesDetection : MonoBehaviour
     [SerializeField] private Vector3 leftUpperCubeSize = new Vector3(1f, 2f, 2f);
     [SerializeField] private Vector2 leftUpperCubePosition = new Vector2(-1f, 1.2f);
 
+    [SerializeField] private Vector3 rightHoleCubeSize = new Vector3(1f, 2f, 2f);
+    [SerializeField] private Vector2 rightHoleCubePosition = new Vector2(1f, 0.2f);
+    [SerializeField] private Vector3 leftHoleCubeSize = new Vector3(1f, 2f, 2f);
+    [SerializeField] private Vector2 leftHoleCubePosition = new Vector2(-1f, 0.2f);
 
+    [SerializeField] private Vector3 groundCheckSize = new Vector3(1f, 2f, 2f);
+    [SerializeField] private Vector2 groundCheckPosition = new Vector2(-1f, 3f);
     private void Start()
     {
 
@@ -37,9 +46,9 @@ public class ObstaclesDetection : MonoBehaviour
         HasObstacleLeft = Physics2D.OverlapBox((Vector2)gameObject.transform.position + leftCubePosition, leftCubeSize, 0f, GameGround);
         HasObstacleRightUp = Physics2D.OverlapBox((Vector2)gameObject.transform.position + rightUpperCubePosition, rightUpperCubeSize, 0f, GameGround);
         HasObstacleLeftUp = Physics2D.OverlapBox((Vector2)gameObject.transform.position + leftUpperCubePosition, leftUpperCubeSize, 0f, GameGround);
-
-
-        Debug.Log(HasObstacleRight);
+        HasNoHoleRight = Physics2D.OverlapBox((Vector2)gameObject.transform.position + rightHoleCubePosition, rightHoleCubeSize, 0f, GameGround);
+        HasNoHoleLeft = Physics2D.OverlapBox((Vector2)gameObject.transform.position + leftHoleCubePosition, leftHoleCubeSize, 0f, GameGround);
+        IsGrounded = Physics2D.OverlapBox((Vector2)gameObject.transform.position + groundCheckPosition, groundCheckSize, 0f, GameGround);
     }
 
     private void OnDrawGizmos()
@@ -50,6 +59,11 @@ public class ObstaclesDetection : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube((Vector2)transform.position + rightUpperCubePosition, rightUpperCubeSize);
         Gizmos.DrawWireCube((Vector2)transform.position + leftUpperCubePosition, leftUpperCubeSize);
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireCube((Vector2)transform.position + rightHoleCubePosition, rightHoleCubeSize);
+        Gizmos.DrawWireCube((Vector2)transform.position + leftHoleCubePosition, leftHoleCubeSize);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube((Vector2)transform.position + groundCheckPosition, groundCheckSize);
 
     }
 }

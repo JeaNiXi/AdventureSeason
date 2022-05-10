@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7918775426526094657}
   - component: {fileID: 7918775426526094656}
   - component: {fileID: 7918775426526094658}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Arzued
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -159,7 +159,7 @@ GameObject:
   - component: {fileID: 7918775427880358064}
   - component: {fileID: 7918775427880358065}
   - component: {fileID: 7918775427880358070}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
