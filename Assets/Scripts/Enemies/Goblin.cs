@@ -18,4 +18,8 @@ public class Goblin : BaseEnemy
         UpdateBattleState();
         
     }
+    private void LateUpdate()
+    {
+
+    }
 }

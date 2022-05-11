@@ -17,5 +17,7 @@ MonoBehaviour:
   _isStandingStill: 0
   _canStandPartol: 1
   _partolStandingTime: 0.2
+  _nearAttackDistance: 2
+  _viewDistance: 10
   _attackInterval: 2
   _searchDuration: 5

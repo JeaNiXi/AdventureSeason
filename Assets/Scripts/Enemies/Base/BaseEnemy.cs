@@ -33,8 +33,6 @@ public class BaseEnemy : MonoBehaviour
 
     [SerializeField] private Transform FOVCastPoint;
     [SerializeField] private Transform NearAttackCastPoint;
-    [SerializeField] private float _nearAttackDistance = 2f;
-    [SerializeField] private float _viewDistance=20f;
 
     [SerializeField] private LayerMask playerLayer;
     protected Vector2 Direction
@@ -88,6 +86,12 @@ public class BaseEnemy : MonoBehaviour
     private float _patrolStandingTime;
     public float PatrolStandingTime { get => _patrolStandingTime; }
 
+    private float _nearAttackDistance;
+    public float NearAttackDistance { get => _nearAttackDistance; set => _nearAttackDistance = value; }
+
+    private float _viewDistance;
+    public float ViewDistance { get => _viewDistance; }
+
     private float _attackInterval;
     public float AttackInterval { get => _attackInterval; }
 
@@ -114,6 +118,9 @@ public class BaseEnemy : MonoBehaviour
     private float _moveCoefficient = 1.0f;
     public float MoveCoefficient { get => _moveCoefficient; set => _moveCoefficient = value; }
 
+    //6 Ground Layer 8 Player Layer
+
+    int hitMask = (1 << 6) | (1 << 8);
 
     protected void InitializeObject()
     {
@@ -130,6 +137,8 @@ public class BaseEnemy : MonoBehaviour
         _isStandingStill = sObject.IsStandingStill;
         _canStandPartol = sObject.CanStandPatrol;
         _patrolStandingTime = sObject.PatrolStandingTime;
+        _nearAttackDistance = sObject.NearAttackDistance;
+        _viewDistance = sObject.ViewDistance;
         _attackInterval = sObject.AttackInterval;
         _searchDuration = sObject.SearchDuration;
 
@@ -139,17 +148,18 @@ public class BaseEnemy : MonoBehaviour
 
     protected void SetSpriteDirection(Vector2 direction)
     {
+
         if (direction == Vector2.left)
         {
             objSpriteRenderer.flipX = true;
-            _viewDistance = -Mathf.Abs(_viewDistance);
-            _nearAttackDistance = -Mathf.Abs(_nearAttackDistance);
+            //_viewDistance = -Mathf.Abs(_viewDistance);
+            NearAttackDistance = -Mathf.Abs(NearAttackDistance);
         }
         if (direction == Vector2.right)
         {
             objSpriteRenderer.flipX = false;
-            _viewDistance = Mathf.Abs(_viewDistance);
-            _nearAttackDistance = Mathf.Abs(_nearAttackDistance);
+            //_viewDistance = Mathf.Abs(_viewDistance);
+            NearAttackDistance = Mathf.Abs(NearAttackDistance);
         }
     }
 
@@ -211,9 +221,17 @@ public class BaseEnemy : MonoBehaviour
 
     protected void SearchForPlayer()
     {
-        RaycastHit2D rayHit = Physics2D.Linecast(FOVCastPoint.transform.position, new Vector2(FOVCastPoint.transform.position.x+_viewDistance, FOVCastPoint.transform.position.y), playerLayer);
-       // if ((rayHit.collider != null && ObjectBattleState==BattleState.DISABLED) || (rayHit.collider != null && IsSearching))
-        if (rayHit.collider != null && ObjectBattleState==BattleState.DISABLED)
+        // working -- RaycastHit2D rayHit = Physics2D.Linecast(FOVCastPoint.transform.position, new Vector2(FOVCastPoint.transform.position.x+_viewDistance, FOVCastPoint.transform.position.y), playerLayer);
+        // working -- RaycastHit2D rayHit = Physics2D.Raycast(FOVCastPoint.transform.position, Direction, 10f, playerLayer);
+        RaycastHit2D rayHit = Physics2D.Raycast(FOVCastPoint.transform.position, Direction, ViewDistance, hitMask);
+        Debug.DrawRay(FOVCastPoint.transform.position, Direction * ViewDistance, Color.white);
+
+        if(rayHit.collider!=null && rayHit.collider.CompareTag("Ground"))
+        {
+            return;
+        }
+        else
+        if (rayHit.collider != null && ObjectBattleState == BattleState.DISABLED)
         {
             ObjectBattleState = BattleState.ENABLED;
             Debug.Log("Found Player");
@@ -230,7 +248,7 @@ public class BaseEnemy : MonoBehaviour
         {
             //if (_searchCoroutineRunning)
             //{
-                Debug.Log("object found Stopping Coroutine");
+                Debug.Log("Object found Stopping Coroutine");
                 StopCoroutine(SearchRoutine);
                 FullyStopSearch();
             //}
@@ -243,7 +261,7 @@ public class BaseEnemy : MonoBehaviour
     {
         if(ObjectBattleState==BattleState.ENABLED)
         {
-            RaycastHit2D rayAttackHit = Physics2D.Linecast(NearAttackCastPoint.transform.position, new Vector2(NearAttackCastPoint.transform.position.x + _nearAttackDistance, NearAttackCastPoint.transform.position.y), playerLayer);
+            RaycastHit2D rayAttackHit = Physics2D.Linecast(NearAttackCastPoint.transform.position, new Vector2(NearAttackCastPoint.transform.position.x + NearAttackDistance, NearAttackCastPoint.transform.position.y), playerLayer);
             if (rayAttackHit.collider != null && !IsAttacking && CanAttack)
             {
                 IsMoving = false;
@@ -286,11 +304,11 @@ public class BaseEnemy : MonoBehaviour
     }
     private void ChangeDirectionOnSearch()
     {
-        if (Hero.transform.position.x - gameObject.transform.position.x >= 2)
+        if (Hero.transform.position.x - gameObject.transform.position.x >= 2 && objObstaclesDetectionScript.IsGrounded)
         {
             ObjectDirection = DirectionEnum.RIGHT;
         }
-        else if (Hero.transform.position.x - gameObject.transform.position.x <-2)
+        else if (Hero.transform.position.x - gameObject.transform.position.x <-2 && objObstaclesDetectionScript.IsGrounded)
         {
             ObjectDirection = DirectionEnum.LEFT;
         }
@@ -342,10 +360,8 @@ public class BaseEnemy : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(FOVCastPoint.transform.position, new Vector2(FOVCastPoint.transform.position.x + _viewDistance, FOVCastPoint.transform.position.y));
         Gizmos.color = Color.green;
-        Gizmos.DrawLine(NearAttackCastPoint.transform.position, new Vector2(NearAttackCastPoint.transform.position.x + _nearAttackDistance, NearAttackCastPoint.transform.position.y));
+        Gizmos.DrawLine(NearAttackCastPoint.transform.position, new Vector2(NearAttackCastPoint.transform.position.x + NearAttackDistance, NearAttackCastPoint.transform.position.y));
     }
 }
 

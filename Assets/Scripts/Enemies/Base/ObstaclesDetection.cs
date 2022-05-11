@@ -49,6 +49,7 @@ public class ObstaclesDetection : MonoBehaviour
         HasNoHoleRight = Physics2D.OverlapBox((Vector2)gameObject.transform.position + rightHoleCubePosition, rightHoleCubeSize, 0f, GameGround);
         HasNoHoleLeft = Physics2D.OverlapBox((Vector2)gameObject.transform.position + leftHoleCubePosition, leftHoleCubeSize, 0f, GameGround);
         IsGrounded = Physics2D.OverlapBox((Vector2)gameObject.transform.position + groundCheckPosition, groundCheckSize, 0f, GameGround);
+
     }
 
     private void OnDrawGizmos()
