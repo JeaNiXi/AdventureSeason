@@ -6,6 +6,8 @@ public class ArzuedCollisions : MonoBehaviour
 {
     [Header("Layers")]
 
+
+
     public LayerMask GroundLayer;
     public LayerMask GrabPlace;
 
@@ -26,26 +28,27 @@ public class ArzuedCollisions : MonoBehaviour
     private float grabRagius = 0.10f;
     private Vector3 boxSize = new Vector3(0.5f, 0.5f, 0.5f);
 
-    public Vector2 bottomOffset, rightOffset, leftOffset, upperOffset;
+    public Vector2 bottomOffset, rightOffset, leftOffset, upperOffset; //bottom offset 0.03
 
     private void Update()
     {
-        IsGrounded = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + bottomOffset, collisionRadius, GroundLayer);
-        IsOnRightWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, sideRadius, GroundLayer);
-        IsOnLeftWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, sideRadius, GroundLayer);
-        IsHittingHead = Physics2D.OverlapBox((Vector2)gameObject.transform.position + upperOffset, boxSize, 0f, GroundLayer);
+            IsGrounded = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + bottomOffset, collisionRadius, GroundLayer);
+            IsOnRightWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, sideRadius, GroundLayer);
+            IsOnLeftWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, sideRadius, GroundLayer);
+            IsHittingHead = Physics2D.OverlapBox((Vector2)gameObject.transform.position + upperOffset, boxSize, 0f, GroundLayer);
 
-        IsGrabbingRight = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, grabRagius, GrabPlace);
-        IsGrabbingLeft = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, grabRagius, GrabPlace);
+            IsGrabbingRight = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, grabRagius, GrabPlace);
+            IsGrabbingLeft = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, grabRagius, GrabPlace);
 
-        if (IsOnLeftWall || IsOnRightWall)
-        {
-            IsOnWall = true;
-        }
-        else
-        {
-            IsOnWall = false;
-        }
+            if (IsOnLeftWall || IsOnRightWall)
+            {
+                IsOnWall = true;
+            }
+            else
+            {
+                IsOnWall = false;
+            }
+        
     }
 
     private void OnDrawGizmos()

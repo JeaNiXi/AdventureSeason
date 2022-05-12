@@ -6,7 +6,7 @@ public class Arzued : MonoBehaviour
 {
     // Adding basic connections.
     Rigidbody2D ArzuedRigidbody2D;
-
+    CapsuleCollider2D ArzuedCapsuleCollider2D;
     ArzuedAnimations ArzuedAnimationScript;
     ArzuedCollisions ArzuedCollisionsScript;
 
@@ -21,11 +21,19 @@ public class Arzued : MonoBehaviour
         RIGHT,
         LEFT
     }
+    enum Status
+    {
+        ALIVE,
+        DEAD
+    }
+
     [SerializeField] CharacterSObject SObject;
     [Space]
     [SerializeField] Movement arzuedMovement = Movement.ALLOWED;
     [SerializeField] Direction arzuedDirection = Direction.RIGHT;
+    [SerializeField] Status arzuedStatus = Status.ALIVE;
 
+    Coroutine HitRoutine;
     // Character vars.
     private float _moveSpeed = 10.0f;
     private float _jumpForce = 10.0f;
@@ -42,6 +50,7 @@ public class Arzued : MonoBehaviour
     private float _yInput;
     private Vector2 _inputVector;
     private Vector2 _wallJumpVector;
+    private Quaternion _deathRotation;
 
     [Space]
     // Booleans
@@ -58,7 +67,14 @@ public class Arzued : MonoBehaviour
     private bool _isAttacking;
     private bool _canAttack;
     private bool _isDashAttacking;
+    private bool _isHurt;
+    private bool _isDead;
     [SerializeField] private bool _canDashAttack;
+
+    private bool _isInPain;
+    private bool _canTakeHit = true;
+    public bool IsInPain { get => _isInPain; set => _isInPain = value; }
+    private bool _painCoroutine;
 
     public bool _isWallSliding;
     public bool _isWallJumping;
@@ -225,11 +241,35 @@ public class Arzued : MonoBehaviour
             _canDashAttack = value;
         }
     }
+    public bool IsHurt
+    {
+        get
+        {
+            return _isHurt;
+        }
+        set
+        {
+            _isHurt = value;
+        }
+    }
+    public bool IsDead
+    {
+        get
+        {
+            return _isDead;
+        }
+        set
+        {
+            _isDead = value;
+        }
+    }
 
     [Space]
     //SO variables
     private string _name;
     public string Name { get => _name; }
+    private float _health;
+    public float Health { get => _health; }
 
 
     private void Start()
@@ -241,7 +281,7 @@ public class Arzued : MonoBehaviour
     private void Initialize()
     {
         ArzuedRigidbody2D = gameObject.GetComponent<Rigidbody2D>();
-
+        ArzuedCapsuleCollider2D = gameObject.GetComponent<CapsuleCollider2D>();
         ArzuedAnimationScript = gameObject.GetComponentInChildren<ArzuedAnimations>();
         ArzuedCollisionsScript = gameObject.GetComponent<ArzuedCollisions>();
         InitSO();
@@ -251,6 +291,7 @@ public class Arzued : MonoBehaviour
     private void InitSO()
     {
         _name = SObject.Name;
+        _health = SObject.Health;
     }
 
     private void StartGame()
@@ -261,9 +302,15 @@ public class Arzued : MonoBehaviour
 
     private void Update()
     {
-        if (arzuedMovement == Movement.RESTRICTED)
+        if (arzuedStatus == Status.ALIVE || !IsDead)
         {
-            if (Input.GetButtonDown("Jump"))
+            CheckHealthStatus();
+        }
+        // Input Controller Below
+        if (arzuedMovement == Movement.RESTRICTED && arzuedStatus == Status.ALIVE)
+        {
+            _xInput = 0;
+            if (Input.GetButtonDown("Jump") && !IsHurt)
             {
                 IsHanging = false;
                 IsGrabbingEdge = false;
@@ -271,25 +318,34 @@ public class Arzued : MonoBehaviour
                 arzuedMovement = Movement.ALLOWED;
                 Jump(Vector2.up, _jumpForce);
             }
-            if ((Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow) && _xInput == 0))
+            if ((Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) && !IsHurt)
             {
                 arzuedMovement = Movement.ALLOWED;
             }
-            if (IsFalling)
+            if (IsFalling && !IsHurt)
             {
                 IsHanging = false;
                 IsGrabbingEdge = false;
                 arzuedMovement = Movement.ALLOWED;
             }
+            if (IsHurt)
+            {
+                arzuedMovement = Movement.ALLOWED;
+                IsHanging = false;
+                IsGrabbingEdge = false;
+                IsFalling = true;
+                IsHurt = false;
+            }
         }
         else
         {
-            if (!IsAttacking)
+            if (!IsAttacking && !IsHurt && arzuedStatus != Status.DEAD)
             {
                 ArzuedRigidbody2D.bodyType = RigidbodyType2D.Dynamic;
                 IsHanging = false;
                 IsGrabbingEdge = false;
             }
+
         }
         // Basic horizontal movement.
         if (arzuedMovement != Movement.RESTRICTED && CanMove)
@@ -299,37 +355,37 @@ public class Arzued : MonoBehaviour
             _inputVector = new Vector2(_xInput, _yInput);
 
         }
-        if (!_isWallSliding || (!ArzuedCollisionsScript.IsGrounded && _inputVector.y != 0))
+        if ((!_isWallSliding || (!ArzuedCollisionsScript.IsGrounded && _inputVector.y != 0)) && !IsHurt && arzuedStatus != Status.DEAD)
         {
             Move(_inputVector);
         }
         // Check for jumping.
-        if (Input.GetButtonDown("Jump") && ArzuedCollisionsScript.IsGrounded && arzuedMovement != Movement.RESTRICTED && !IsSliding && !IsDashing && CanMove && !IsAttacking)
+        if (Input.GetButtonDown("Jump") && ArzuedCollisionsScript.IsGrounded && arzuedMovement != Movement.RESTRICTED && !IsSliding && !IsDashing && CanMove && !IsAttacking && arzuedStatus != Status.DEAD)
         {
             Jump(Vector2.up, _jumpForce);
         }
         // Check for jumping from wall.
-        if (Input.GetButtonDown("Jump") && _isWallSliding && arzuedMovement != Movement.RESTRICTED)
+        if (Input.GetButtonDown("Jump") && _isWallSliding && arzuedMovement != Movement.RESTRICTED && arzuedStatus != Status.DEAD)
         {
             WallJump();
         }
         // Check for dashing while jumping.
-        if (Input.GetButtonDown("Fire2") && !ArzuedCollisionsScript.IsGrounded && !_hasDashJumped && !IsWallSliding && !IsHanging)
+        if (Input.GetButtonDown("Fire2") && !ArzuedCollisionsScript.IsGrounded && !_hasDashJumped && !IsWallSliding && !IsHanging && arzuedStatus != Status.DEAD)
         {
             DashJump();
         }
         // Check for sliding.
-        if (Input.GetKeyDown(KeyCode.LeftControl) && ArzuedCollisionsScript.IsGrounded && !IsHanging && Mathf.Abs(ArzuedRigidbody2D.velocity.y) < 1f && !IsIdle && !IsWallSliding && !IsDashing && !IsSliding && CanMove)
+        if (Input.GetKeyDown(KeyCode.LeftControl) && ArzuedCollisionsScript.IsGrounded && !IsHanging && Mathf.Abs(ArzuedRigidbody2D.velocity.y) < 1f && !IsIdle && !IsWallSliding && !IsDashing && !IsSliding && CanMove && arzuedStatus != Status.DEAD)
         {
             Slide();
         }
         // Check for sprinting
-        if (Input.GetKeyDown(KeyCode.LeftShift) && ArzuedCollisionsScript.IsGrounded && !IsHanging && Mathf.Abs(ArzuedRigidbody2D.velocity.y) < 1f && !IsIdle && !IsWallSliding && !IsDashing && !IsSliding && CanMove)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && ArzuedCollisionsScript.IsGrounded && !IsHanging && Mathf.Abs(ArzuedRigidbody2D.velocity.y) < 1f && !IsIdle && !IsWallSliding && !IsDashing && !IsSliding && CanMove && arzuedStatus != Status.DEAD)
         {
             Dash();
         }
         // Check for Jumping/Falling
-        if (ArzuedRigidbody2D.velocity.y > 0 && !ArzuedCollisionsScript.IsGrounded)
+        if (ArzuedRigidbody2D.velocity.y > 0 && !ArzuedCollisionsScript.IsGrounded && !IsHurt)
         {
             _isJumping = true;
             _isFalling = false;
@@ -338,7 +394,7 @@ public class Arzued : MonoBehaviour
             IsHanging = false;
             CanMove = true;
         }
-        if (ArzuedRigidbody2D.velocity.y < 0 && !ArzuedCollisionsScript.IsGrounded)
+        if (ArzuedRigidbody2D.velocity.y < 0 && !ArzuedCollisionsScript.IsGrounded && !IsHurt)
         {
             _isFalling = true;
             _isJumping = false;
@@ -348,7 +404,7 @@ public class Arzued : MonoBehaviour
             CanMove = true;
         }
         // Check for sliding or dashing up or down.
-        if (Mathf.Abs(ArzuedRigidbody2D.velocity.y) > 1f && ArzuedCollisionsScript.IsGrounded && (IsSliding || IsDashing))
+        if (Mathf.Abs(ArzuedRigidbody2D.velocity.y) > 1f && ArzuedCollisionsScript.IsGrounded && (IsSliding || IsDashing) && arzuedStatus != Status.DEAD)
         {
             if (IsSliding)
             {
@@ -373,18 +429,18 @@ public class Arzued : MonoBehaviour
             _isIdle = false;
         }
         // Check if character is idle.
-        if (_inputVector == Vector2.zero && !_isFalling && !IsAttacking)
+        if (_inputVector == Vector2.zero && !_isFalling && !IsAttacking && !IsHurt)
         {
             _isIdle = true;
         }
         // Check for wall sliding.
-        if ((ArzuedCollisionsScript.IsOnLeftWall && _inputVector.x < 0 && !ArzuedCollisionsScript.IsGrounded && !ArzuedCollisionsScript.IsHittingHead) || (ArzuedCollisionsScript.IsOnRightWall && _inputVector.x > 0 && !ArzuedCollisionsScript.IsGrounded && !ArzuedCollisionsScript.IsHittingHead))
+        if ((ArzuedCollisionsScript.IsOnLeftWall && _inputVector.x < 0 && !ArzuedCollisionsScript.IsGrounded && !ArzuedCollisionsScript.IsHittingHead && !IsHurt) || (ArzuedCollisionsScript.IsOnRightWall && _inputVector.x > 0 && !ArzuedCollisionsScript.IsGrounded && !ArzuedCollisionsScript.IsHittingHead && !IsHurt))
         {
             _isWallSliding = true;
             _isFalling = false;
             WallSlide();
         }
-        else if (!ArzuedCollisionsScript.IsGrounded)
+        else if (!ArzuedCollisionsScript.IsGrounded && !IsHurt)
         {
             _isWallSliding = false;
             _isFalling = true;
@@ -393,14 +449,14 @@ public class Arzued : MonoBehaviour
         {
             _isWallSliding = false;
         }
-        if (((ArzuedCollisionsScript.IsGrabbingRight && arzuedDirection == Direction.RIGHT) || (ArzuedCollisionsScript.IsGrabbingLeft && arzuedDirection == Direction.LEFT)) && !IsJumping && Mathf.Abs(_inputVector.x) > 0)
+        if (((ArzuedCollisionsScript.IsGrabbingRight && arzuedDirection == Direction.RIGHT) || (ArzuedCollisionsScript.IsGrabbingLeft && arzuedDirection == Direction.LEFT)) && !IsJumping && Mathf.Abs(_inputVector.x) > 0 && !IsHurt && arzuedStatus != Status.DEAD)
         {
             GrabEdge();
         }
 
         // Attacks Start Here
         // Checking for attack
-        if (Input.GetButtonDown("Fire1") && ArzuedCollisionsScript.IsGrounded && !IsAttacking && !IsSliding && !IsHanging && !IsGrabbingEdge && !IsFalling && !IsJumping && _canAttack && !IsDashAttacking)
+        if (Input.GetButtonDown("Fire1") && ArzuedCollisionsScript.IsGrounded && !IsAttacking && !IsSliding && !IsHanging && !IsGrabbingEdge && !IsFalling && !IsJumping && _canAttack && !IsDashAttacking && arzuedStatus != Status.DEAD)
         {
             if (!IsDashing)
             {
@@ -533,7 +589,8 @@ public class Arzued : MonoBehaviour
             yield return new WaitForSeconds(_dashAnimationTime);
             IsDashing = false;
             yield return new WaitForSeconds(_dashStopTime - _dashAnimationTime);
-            ArzuedRigidbody2D.velocity = Vector2.zero;
+            if (arzuedStatus != Status.DEAD)
+                ArzuedRigidbody2D.velocity = Vector2.zero;
             yield break;
         }
         yield break;
@@ -559,5 +616,146 @@ public class Arzued : MonoBehaviour
         _isWallJumping = false;
         _canMove = true;
         yield break;
+    }
+    private IEnumerator HurtDelay(float delay)
+    {
+        Debug.Log("Started Hert coro");
+        _canTakeHit = false;
+        yield return new WaitForSeconds(delay);
+        Debug.Log("Ended hert coro");
+        _canTakeHit = true;
+        yield break;
+    }
+    // Collidders
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Enemy") && _canTakeHit)
+        {
+            TakeHit(collision);
+            HitPhysics();
+            EnemyHitPhysics(collision);
+        }
+        if (arzuedStatus == Status.DEAD && collision.gameObject.CompareTag("Enemy"))
+        {
+            Physics2D.IgnoreCollision(ArzuedCapsuleCollider2D, collision.collider);
+        }
+    }
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Enemy") && _canTakeHit)
+        {
+            TakeHit(collision);
+            HitPhysics();
+        }
+        if (arzuedStatus == Status.DEAD && collision.gameObject.CompareTag("Enemy"))
+        {
+            Physics2D.IgnoreCollision(ArzuedCapsuleCollider2D, collision.collider);
+        }
+    }
+
+    //private void OnCollisionExit2D(Collision2D collision)
+    //{
+    //    if(collision.gameObject.CompareTag("Enemy"))
+    //    {
+    //        _painCoroutine = false;
+    //        StopCoroutine(HitRoutine);
+    //        IsInPain = false;
+
+    //        Debug.Log("Routine ended");
+    //    }
+    //}
+    private void TakeHit(Collision2D collision) // add collision hit read
+    {
+        if (!IsHurt)
+        {
+            TakeDamage(collision.gameObject.GetComponent<BaseEnemy>().CollisionDamage);
+            HitRoutine = StartCoroutine(HurtDelay(0.6f));
+            IsIdle = false;
+            IsMoving = false;
+            IsFalling = false;
+            IsJumping = false;
+
+            IsHurt = true;
+        }
+    }
+    private void HitPhysics()
+    {
+        float bounce = 4f;
+        if (!IsFalling)
+        {
+            ArzuedRigidbody2D.velocity = Vector2.up * bounce;
+        }
+    }
+    private void EnemyHitPhysics(Collision2D collision)
+    {
+        float bounce = 4f;
+        collision.gameObject.GetComponent<Rigidbody2D>().velocity = Vector2.up * bounce;
+    }
+    private Vector2 GetCollisionDirection()
+    {
+        if (arzuedDirection == Direction.RIGHT)
+            return Vector2.left;
+        else
+            return Vector2.right;
+    }
+    ////
+    ////// GAME MECHANICS BELOW
+    ////
+    private void CheckHealthStatus()
+    {
+        if (Health <= 0)
+        {
+            SetDeadStatus();
+        }
+    }
+    private void SetDeadStatus()
+    {
+        bool foundRot = false;
+        Debug.Log("is Dead");
+
+        arzuedStatus = Status.DEAD;
+        arzuedMovement = Movement.RESTRICTED;
+        if (IsHanging)
+        {
+            CanMove = false;
+            IsHanging = false;
+            IsGrabbingEdge = false;
+            IsSliding = false;
+        }
+        RaycastHit2D deathHit = Physics2D.Raycast(gameObject.transform.position, Vector2.down, 50f);
+        //Debug.DrawRay(gameObject.transform.position, Vector2.down, Color.yellow);
+        if (deathHit.collider != null && deathHit.collider.gameObject.CompareTag("Ground"))
+        {
+            foundRot = true;
+            _deathRotation = deathHit.collider.gameObject.transform.rotation;
+            Debug.Log($" rotation is {_deathRotation}");
+        }
+
+        if (foundRot && ArzuedCollisionsScript.IsGrounded)
+        {
+            _inputVector = Vector2.zero;
+            ArzuedCapsuleCollider2D.enabled = false;
+            ArzuedRigidbody2D.bodyType = RigidbodyType2D.Static;
+            gameObject.transform.rotation = _deathRotation;
+            GameManager.Instance.GPState = GameManager.GlobalPlayerState.DEAD;
+            PlayDeathAnimation();
+
+        }
+        //disable collider
+        //remove player tag
+        //kinematic
+    }
+    private void PlayDeathAnimation()
+    {
+        IsMoving = false;
+        IsFalling = false;
+        IsIdle = false;
+
+        IsDead = true;
+    }
+    private void TakeDamage(float damage)
+    {
+        _health -= damage;
+        Debug.Log($"Health Left {Health} ");
     }
 }

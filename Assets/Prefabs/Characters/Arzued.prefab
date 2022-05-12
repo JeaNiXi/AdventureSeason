@@ -82,7 +82,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
+  m_Mass: 60
   m_LinearDrag: 0
   m_AngularDrag: 0
   m_GravityScale: 1
@@ -106,6 +106,7 @@ MonoBehaviour:
   SObject: {fileID: 11400000, guid: bd2a1397d73fbd845841c38fb7b18e4b, type: 2}
   arzuedMovement: 1
   arzuedDirection: 0
+  arzuedStatus: 0
   _canMove: 0
   _isIdle: 0
   _isGrabbingEdge: 0

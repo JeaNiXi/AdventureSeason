@@ -98,6 +98,13 @@ public class BaseEnemy : MonoBehaviour
     private float _searchDuration;
     public float SearchDuration { get => _searchDuration; }
 
+    private float _health;
+    public float Health { get => _health; }
+
+    private float _collisionDamage;
+    public float CollisionDamage { get => _collisionDamage; }
+
+
     // State Variables
     private bool _isMoving;
     public bool IsMoving { get => _isMoving; set => _isMoving = value; }
@@ -118,6 +125,7 @@ public class BaseEnemy : MonoBehaviour
     private float _moveCoefficient = 1.0f;
     public float MoveCoefficient { get => _moveCoefficient; set => _moveCoefficient = value; }
 
+    private bool RoutineCheck;
     //6 Ground Layer 8 Player Layer
 
     int hitMask = (1 << 6) | (1 << 8);
@@ -141,6 +149,8 @@ public class BaseEnemy : MonoBehaviour
         _viewDistance = sObject.ViewDistance;
         _attackInterval = sObject.AttackInterval;
         _searchDuration = sObject.SearchDuration;
+        _health = sObject.Health;
+        _collisionDamage = sObject.CollisionDamage;
 
         CanAttack = true;
         
@@ -228,7 +238,19 @@ public class BaseEnemy : MonoBehaviour
 
         if(rayHit.collider!=null && rayHit.collider.CompareTag("Ground"))
         {
-            return;
+            if (GameManager.Instance.GPState == GameManager.GlobalPlayerState.DEAD && ObjectBattleState == BattleState.ENABLED) 
+            {
+                Debug.Log("Object dead, stopping");
+                if (RoutineCheck)
+                {
+                    StopCoroutine(SearchRoutine);
+                }
+                FullyStopSearch();
+            }
+            else
+            {
+                return;
+            }
         }
         else
         if (rayHit.collider != null && ObjectBattleState == BattleState.DISABLED)
@@ -253,6 +275,12 @@ public class BaseEnemy : MonoBehaviour
                 FullyStopSearch();
             //}
         }
+        //if (ObjectBattleState == BattleState.ENABLED && !IsSearching && GameManager.Instance.GPState == GameManager.GlobalPlayerState.DEAD)
+        //{
+        //    Debug.Log("Object dead, stopping");
+        //    StopCoroutine(SearchRoutine);
+        //    FullyStopSearch();
+        //}
     }
 
     //Attack State
@@ -344,10 +372,12 @@ public class BaseEnemy : MonoBehaviour
     }
     IEnumerator SearchCooldown(float duration)
     {
+        RoutineCheck = true;
         Debug.Log("Search Coro Started");
         yield return new WaitForSeconds(duration);
         FullyStopSearch();
         Debug.Log("Search Coro Ended");
+        RoutineCheck = false;
         yield break;
     }
     /////// Animations handler.

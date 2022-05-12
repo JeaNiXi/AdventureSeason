@@ -36,4 +36,11 @@ public class EnemySObject : ScriptableObject
 
     [SerializeField] private float _searchDuration;
     public float SearchDuration { get => _searchDuration; }
+    [Space]
+
+    [SerializeField] private float _health;
+    public float Health { get => _health; }
+
+    [SerializeField] private float _collisionDamage;
+    public float CollisionDamage { get => _collisionDamage; }
 }

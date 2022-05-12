@@ -21,3 +21,5 @@ MonoBehaviour:
   _viewDistance: 10
   _attackInterval: 2
   _searchDuration: 5
+  _health: 100
+  _collisionDamage: 30

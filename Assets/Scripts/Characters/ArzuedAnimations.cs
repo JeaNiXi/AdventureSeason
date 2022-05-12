@@ -35,6 +35,8 @@ public class ArzuedAnimations : MonoBehaviour
         ArzuedAnimator.SetBool("_isAttacking", ArzuedBaseScript.IsAttacking);
         ArzuedAnimator.SetBool("_isDashAttacking", ArzuedBaseScript.IsDashAttacking);
         ArzuedAnimator.SetBool("_isGrounded", ArzuedCollisionsScript.IsGrounded);
+        ArzuedAnimator.SetBool("_isHurt", ArzuedBaseScript.IsHurt);
+        ArzuedAnimator.SetBool("_isDead", ArzuedBaseScript.IsDead);
     }
     public void Flip(bool flipBool)
     {
@@ -64,5 +66,9 @@ public class ArzuedAnimations : MonoBehaviour
         ArzuedBaseScript.IsDashAttacking = false;
         ArzuedBaseScript.CanAttack = true;
         ArzuedBaseScript.CanMove = true;
+    }
+    public void DisableHurtEffect()
+    {
+        ArzuedBaseScript.IsHurt = false;
     }
 }
