@@ -74,7 +74,11 @@ public class ArzuedAnimations : MonoBehaviour
 
     public void TriggerAttack()
     {
-        ArzuedBaseScript.Attack();
+        ArzuedBaseScript.Attack(ArzuedBaseScript.BaseDamage, ArzuedBaseScript.DamageModificator);
+    }
+    public void TriggerHeavyAttack()
+    {
+        ArzuedBaseScript.Attack(ArzuedBaseScript.HeavyDamage, ArzuedBaseScript.HeavyDamageModificator);
     }
 
     public void EnableInvincibleState()

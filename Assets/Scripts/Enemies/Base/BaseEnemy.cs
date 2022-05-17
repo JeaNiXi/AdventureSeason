@@ -33,9 +33,9 @@ public class BaseEnemy : MonoBehaviour
     [SerializeField] internal BattleState ObjectBattleState = BattleState.DISABLED;
     [SerializeField] private State ObjectState = State.ALIVE;
 
-    [Space]
-    [SerializeField] Transform Hero;
-    [Space]
+    //[Space]
+    //[SerializeField] Transform Hero;
+    //[Space]
 
     [SerializeField] private Transform FOVCastPoint;
     [SerializeField] private Transform NearAttackCastPoint;
@@ -350,11 +350,11 @@ public class BaseEnemy : MonoBehaviour
     }
     private void ChangeDirectionOnSearch()
     {
-        if (Hero.transform.position.x - gameObject.transform.position.x >= 2 && objObstaclesDetectionScript.IsGrounded)
+        if (GameManager.Instance.Arzued.transform.position.x - gameObject.transform.position.x >= 2 && objObstaclesDetectionScript.IsGrounded)
         {
             ObjectDirection = DirectionEnum.RIGHT;
         }
-        else if (Hero.transform.position.x - gameObject.transform.position.x < -2 && objObstaclesDetectionScript.IsGrounded)
+        else if (GameManager.Instance.Arzued.transform.position.x - gameObject.transform.position.x < -2 && objObstaclesDetectionScript.IsGrounded)
         {
             ObjectDirection = DirectionEnum.LEFT;
         }

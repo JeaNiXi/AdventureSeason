@@ -24,5 +24,6 @@ public class GameManager : MonoBehaviour
         DEAD
     }
     public GlobalPlayerState GPState = GlobalPlayerState.ALIVE;
-    
+
+    public Transform Arzued;
 }

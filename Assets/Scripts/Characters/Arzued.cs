@@ -275,12 +275,15 @@ public class Arzued : MonoBehaviour
     public float Health { get => _health; }
     private float _baseDamage;
     public float BaseDamage { get => _baseDamage; }
-
+    private float _heavyDamage;
+    public float HeavyDamage { get => _heavyDamage; }
 
     // Character Variables
 
     private float _damageModificator = 1;
     public float DamageModificator { get => _damageModificator; set => _damageModificator = value; }
+    private float _heavyDamageModificator = 1;
+    public float HeavyDamageModificator { get => _heavyDamageModificator; set => _heavyDamageModificator = value; }
     private void Start()
     {
         Initialize();
@@ -302,6 +305,7 @@ public class Arzued : MonoBehaviour
         _name = SObject.Name;
         _health = SObject.Health;
         _baseDamage = SObject.BaseDamage;
+        _heavyDamage = SObject.HeavyDamage;
     }
 
     private void StartGame()
@@ -466,7 +470,7 @@ public class Arzued : MonoBehaviour
 
         // Attacks Start Here
         // Checking for attack
-        if (Input.GetButtonDown("Fire1") && ArzuedCollisionsScript.IsGrounded && !IsAttacking && !IsSliding && !IsHanging && !IsGrabbingEdge && !IsFalling && !IsJumping && _canAttack && !IsDashAttacking && arzuedStatus != Status.DEAD)
+        if (Input.GetButtonDown("Fire1") && ArzuedCollisionsScript.IsGrounded && !IsAttacking && !IsSliding && !IsHanging && !IsGrabbingEdge && !IsFalling && !IsJumping && CanAttack && !IsDashAttacking && arzuedStatus != Status.DEAD)
         {
             if (!IsDashing)
             {
@@ -493,6 +497,7 @@ public class Arzued : MonoBehaviour
         }
         if (_inputVector.x > 0)
         {
+            IsAttacking = false;
             arzuedDirection = Direction.RIGHT;
             ArzuedAnimationScript.Flip(false);
             _isMoving = true;
@@ -500,6 +505,7 @@ public class Arzued : MonoBehaviour
         }
         else if (_inputVector.x < 0)
         {
+            IsAttacking = false;
             arzuedDirection = Direction.LEFT;
             ArzuedAnimationScript.Flip(true);
             _isMoving = true;
@@ -584,20 +590,20 @@ public class Arzued : MonoBehaviour
         StartCoroutine(DashController());
     }
     // ATTACK ETC
-    internal void Attack()
+    internal void Attack(float damage, float modificator)
     {
         if(ArzuedCollisionsScript.attackedEnemiesRight.Length!= 0 && arzuedDirection==Direction.RIGHT)
         {
             foreach(Collider2D enemy in ArzuedCollisionsScript.attackedEnemiesRight)
             {
-                enemy.GetComponent<BaseEnemy>().TakeHit(BaseDamage * DamageModificator);
+                enemy.GetComponent<BaseEnemy>().TakeHit(damage * modificator);
             }
         }
         if (ArzuedCollisionsScript.attackedEnemiesLeft.Length != 0 && arzuedDirection == Direction.LEFT)
         {
             foreach (Collider2D enemy in ArzuedCollisionsScript.attackedEnemiesLeft)
             {
-                enemy.GetComponent<BaseEnemy>().TakeHit(BaseDamage * DamageModificator);
+                enemy.GetComponent<BaseEnemy>().TakeHit(damage * modificator);
             }
         }
     }
@@ -703,6 +709,7 @@ public class Arzued : MonoBehaviour
             IsMoving = false;
             IsFalling = false;
             IsJumping = false;
+            IsAttacking = false;
 
             IsHurt = true;
         }
@@ -714,6 +721,7 @@ public class Arzued : MonoBehaviour
         IsMoving = false;
         IsFalling = false;
         IsJumping = false;
+        IsAttacking = false;
 
         IsHurt = true;
     }

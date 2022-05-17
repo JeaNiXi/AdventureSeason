@@ -15,4 +15,7 @@ public class CharacterSObject : ScriptableObject
     [SerializeField] private float _baseDamage;
     public float BaseDamage { get => _baseDamage; }
 
+    [SerializeField] private float _heavyDamage;
+    public float HeavyDamage { get => _heavyDamage; }
+
 }
