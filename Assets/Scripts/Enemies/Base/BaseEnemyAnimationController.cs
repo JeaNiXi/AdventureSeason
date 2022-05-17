@@ -16,4 +16,25 @@ public class BaseEnemyAnimationController : MonoBehaviour
         BaseEnemyScript.IsAttacking = false;
         BaseEnemyScript.DoAttack1 = false;
     }
+
+    public void StopTakeHitBool()
+    {
+        BaseEnemyScript.TakeHitBool = false;
+
+    }
+
+    public void DestroyObject()
+    {
+        BaseEnemyScript.DestoyEnemy();
+    }
+
+    public void ChangeDirectionOnHit()
+    {
+        BaseEnemyScript.ObjectBattleState = BaseEnemy.BattleState.ENABLED;
+    }
+
+    public void DoAttack()
+    {
+        BaseEnemyScript.OrganizeAttack();
+    }
 }

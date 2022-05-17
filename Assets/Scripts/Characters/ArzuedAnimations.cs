@@ -71,4 +71,19 @@ public class ArzuedAnimations : MonoBehaviour
     {
         ArzuedBaseScript.IsHurt = false;
     }
+
+    public void TriggerAttack()
+    {
+        ArzuedBaseScript.Attack();
+    }
+
+    public void EnableInvincibleState()
+    {
+        ArzuedBaseScript.CanTakeHit = false;
+    }
+
+    public void DisableInvincibleState()
+    {
+        ArzuedBaseScript.CanTakeHit = true;
+    }
 }

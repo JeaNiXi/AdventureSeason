@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Arzued
   m_EditorClassIdentifier: 
   _name: Arzued
-  _health: 100
+  _health: 20
+  _baseDamage: 50

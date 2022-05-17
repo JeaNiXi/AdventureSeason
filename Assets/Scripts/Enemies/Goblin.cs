@@ -16,7 +16,7 @@ public class Goblin : BaseEnemy
         CheckForObstacles();
         SearchForPlayer();
         UpdateBattleState();
-        
+        CheckStatus();
     }
     private void LateUpdate()
     {

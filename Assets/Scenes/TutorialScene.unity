@@ -265,7 +265,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 213895068}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: FOVCastPoint
   m_TagString: Untagged
   m_Icon: {fileID: 4422084297763085224, guid: 0000000000000000d000000000000000, type: 0}
@@ -296,7 +296,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 541436363}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: AttackCastPointNear
   m_TagString: Untagged
   m_Icon: {fileID: 1206586993520771344, guid: 0000000000000000d000000000000000, type: 0}
@@ -1915,7 +1915,7 @@ GameObject:
   - component: {fileID: 1655848770}
   - component: {fileID: 1655848769}
   - component: {fileID: 1655848771}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2066,6 +2066,37 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1798641558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1798641559}
+  m_Layer: 0
+  m_Name: FIX podcat udar animation if dead
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1798641559
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798641558}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.9628706, y: 3.6396763, z: -4.0345874}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 22
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1805687323
 GameObject:
   m_ObjectHideFlags: 0
@@ -2079,7 +2110,7 @@ GameObject:
   - component: {fileID: 1805687327}
   - component: {fileID: 1805687328}
   - component: {fileID: 1805687329}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Goblin
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -2115,7 +2146,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1805687323}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -1.43, y: 0.08, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2138,9 +2169,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sObject: {fileID: 11400000, guid: 87160d3b4a015a1429205db4025b0dc6, type: 2}
-  ObjectDirection: 1
+  ObjectDirection: 0
   ObjectMovement: 0
   ObjectBattleState: 1
+  ObjectState: 0
   Hero: {fileID: 1015112770}
   FOVCastPoint: {fileID: 213895068}
   NearAttackCastPoint: {fileID: 541436363}
@@ -2162,6 +2194,9 @@ MonoBehaviour:
   GameGround:
     serializedVersion: 2
     m_Bits: 64
+  PlayerLayer:
+    serializedVersion: 2
+    m_Bits: 256
   HasObstacleRight: 0
   HasObstacleLeft: 0
   HasObstacleRightUp: 0
@@ -2169,6 +2204,8 @@ MonoBehaviour:
   HasNoHoleRight: 1
   HasNoHoleLeft: 1
   IsGrounded: 0
+  IsAttackingRight: {fileID: 0}
+  IsAttackingLeft: {fileID: 0}
   rightCubeSize: {x: 1, y: 1, z: 0}
   rightCubePosition: {x: 1, y: 0.65}
   leftCubeSize: {x: 1, y: 1, z: 0}
@@ -2182,7 +2219,10 @@ MonoBehaviour:
   leftHoleCubeSize: {x: 2, y: 4, z: 0}
   leftHoleCubePosition: {x: -2.56, y: -1.8}
   groundCheckSize: {x: 0.6, y: 0.3, z: 0}
-  groundCheckPosition: {x: 0.11, y: -0.1}
+  groundCheckPosition: {x: 0.05, y: 0.13}
+  attackRadius: 1
+  RightAttackPosition: {x: 1.4, y: 0.9}
+  LeftAttackPosition: {x: -1.4, y: 0.9}
 --- !u!70 &1805687329
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -2403,11 +2443,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7918775426526094525, guid: 3a42d4964e6015140b1881206ad93a0c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.27
+      value: -11.65
       objectReference: {fileID: 0}
     - target: {fileID: 7918775426526094525, guid: 3a42d4964e6015140b1881206ad93a0c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.12
+      value: -0.37
       objectReference: {fileID: 0}
     - target: {fileID: 7918775426526094525, guid: 3a42d4964e6015140b1881206ad93a0c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2444,10 +2484,6 @@ PrefabInstance:
     - target: {fileID: 7918775426526094527, guid: 3a42d4964e6015140b1881206ad93a0c, type: 3}
       propertyPath: m_Name
       value: Arzued
-      objectReference: {fileID: 0}
-    - target: {fileID: 7918775426526094657, guid: 3a42d4964e6015140b1881206ad93a0c, type: 3}
-      propertyPath: bottomOffset.y
-      value: 0.33
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3a42d4964e6015140b1881206ad93a0c, type: 3}

@@ -6,6 +6,7 @@ public class ObstaclesDetection : MonoBehaviour
 {
     [Header("Layers")]
     public LayerMask GameGround;
+    public LayerMask PlayerLayer;
 
     [Space]
     public bool HasObstacleRight;
@@ -15,6 +16,9 @@ public class ObstaclesDetection : MonoBehaviour
     public bool HasNoHoleRight;
     public bool HasNoHoleLeft;
     public bool IsGrounded;
+
+    public Collider2D IsAttackingRight;
+    public Collider2D IsAttackingLeft;
 
     [Space]
     [Header("Collisions")]
@@ -36,6 +40,11 @@ public class ObstaclesDetection : MonoBehaviour
 
     [SerializeField] private Vector3 groundCheckSize = new Vector3(1f, 2f, 2f);
     [SerializeField] private Vector2 groundCheckPosition = new Vector2(-1f, 3f);
+
+    [SerializeField] private float attackRadius;
+    [SerializeField] private Vector2 RightAttackPosition;
+    [SerializeField] private Vector2 LeftAttackPosition;
+
     private void Start()
     {
 
@@ -49,6 +58,9 @@ public class ObstaclesDetection : MonoBehaviour
         HasNoHoleRight = Physics2D.OverlapBox((Vector2)gameObject.transform.position + rightHoleCubePosition, rightHoleCubeSize, 0f, GameGround);
         HasNoHoleLeft = Physics2D.OverlapBox((Vector2)gameObject.transform.position + leftHoleCubePosition, leftHoleCubeSize, 0f, GameGround);
         IsGrounded = Physics2D.OverlapBox((Vector2)gameObject.transform.position + groundCheckPosition, groundCheckSize, 0f, GameGround);
+
+        IsAttackingRight = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + RightAttackPosition, attackRadius, PlayerLayer);
+        IsAttackingLeft = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + LeftAttackPosition, attackRadius, PlayerLayer);
 
     }
 
@@ -65,6 +77,9 @@ public class ObstaclesDetection : MonoBehaviour
         Gizmos.DrawWireCube((Vector2)transform.position + leftHoleCubePosition, leftHoleCubeSize);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube((Vector2)transform.position + groundCheckPosition, groundCheckSize);
+        Gizmos.color = Color.black;
+        Gizmos.DrawWireSphere((Vector2)transform.position + RightAttackPosition, attackRadius);
+        Gizmos.DrawWireSphere((Vector2)transform.position + LeftAttackPosition, attackRadius);
 
     }
 }

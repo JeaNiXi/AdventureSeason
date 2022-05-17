@@ -10,6 +10,10 @@ public class ArzuedCollisions : MonoBehaviour
 
     public LayerMask GroundLayer;
     public LayerMask GrabPlace;
+    public LayerMask Enemies;
+
+    public Collider2D[] attackedEnemiesRight;
+    public Collider2D[] attackedEnemiesLeft;
 
     [Space]
     public bool IsGrounded;
@@ -19,6 +23,7 @@ public class ArzuedCollisions : MonoBehaviour
     public bool IsGrabbingRight;
     public bool IsGrabbingLeft;
     public bool IsHittingHead;
+
 
     [Space]
     [Header("Collisions")]
@@ -30,25 +35,32 @@ public class ArzuedCollisions : MonoBehaviour
 
     public Vector2 bottomOffset, rightOffset, leftOffset, upperOffset; //bottom offset 0.03
 
+    public float AttackRadius = 2f;
+    public Vector2 AttackRightOffset, AttackLeftOffset;
+    //public Vector3 AttackRightBoxSize, AttackLeftBoxSize;
+
     private void Update()
     {
-            IsGrounded = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + bottomOffset, collisionRadius, GroundLayer);
-            IsOnRightWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, sideRadius, GroundLayer);
-            IsOnLeftWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, sideRadius, GroundLayer);
-            IsHittingHead = Physics2D.OverlapBox((Vector2)gameObject.transform.position + upperOffset, boxSize, 0f, GroundLayer);
+        IsGrounded = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + bottomOffset, collisionRadius, GroundLayer);
+        IsOnRightWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, sideRadius, GroundLayer);
+        IsOnLeftWall = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, sideRadius, GroundLayer);
+        IsHittingHead = Physics2D.OverlapBox((Vector2)gameObject.transform.position + upperOffset, boxSize, 0f, GroundLayer);
 
-            IsGrabbingRight = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, grabRagius, GrabPlace);
-            IsGrabbingLeft = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, grabRagius, GrabPlace);
+        IsGrabbingRight = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + rightOffset, grabRagius, GrabPlace);
+        IsGrabbingLeft = Physics2D.OverlapCircle((Vector2)gameObject.transform.position + leftOffset, grabRagius, GrabPlace);
 
-            if (IsOnLeftWall || IsOnRightWall)
-            {
-                IsOnWall = true;
-            }
-            else
-            {
-                IsOnWall = false;
-            }
-        
+        attackedEnemiesRight = Physics2D.OverlapCircleAll((Vector2)gameObject.transform.position + AttackRightOffset, AttackRadius, Enemies);
+        attackedEnemiesLeft = Physics2D.OverlapCircleAll((Vector2)gameObject.transform.position + AttackLeftOffset, AttackRadius, Enemies);
+
+        if (IsOnLeftWall || IsOnRightWall)
+        {
+            IsOnWall = true;
+        }
+        else
+        {
+            IsOnWall = false;
+        }
+
     }
 
     private void OnDrawGizmos()
@@ -63,6 +75,9 @@ public class ArzuedCollisions : MonoBehaviour
         Gizmos.DrawWireSphere((Vector2)transform.position + rightOffset, grabRagius);
         Gizmos.DrawWireSphere((Vector2)transform.position + leftOffset, grabRagius);
         Gizmos.DrawWireCube((Vector2)transform.position + upperOffset, boxSize);
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere((Vector2)transform.position + AttackRightOffset, AttackRadius);
+        Gizmos.DrawWireSphere((Vector2)transform.position + AttackLeftOffset, AttackRadius);
 
     }
 }

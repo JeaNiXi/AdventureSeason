@@ -43,4 +43,7 @@ public class EnemySObject : ScriptableObject
 
     [SerializeField] private float _collisionDamage;
     public float CollisionDamage { get => _collisionDamage; }
+
+    [SerializeField] private float _attackDamage;
+    public float AttackDamage { get => _attackDamage; }
 }

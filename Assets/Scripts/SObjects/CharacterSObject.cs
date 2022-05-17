@@ -8,6 +8,11 @@ public class CharacterSObject : ScriptableObject
 {
     [SerializeField] private string _name;
     public string Name { get => _name; }
+
     [SerializeField] private float _health;
     public float Health { get => _health; }
+
+    [SerializeField] private float _baseDamage;
+    public float BaseDamage { get => _baseDamage; }
+
 }

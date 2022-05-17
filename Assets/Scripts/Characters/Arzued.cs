@@ -45,6 +45,8 @@ public class Arzued : MonoBehaviour
     private float _dashImpulse = 10.0f;
     private float _dashUpImpulse = 12.0f;
 
+    
+
     // Naming core vars.
     private float _xInput;
     private float _yInput;
@@ -73,6 +75,7 @@ public class Arzued : MonoBehaviour
 
     private bool _isInPain;
     private bool _canTakeHit = true;
+    public bool CanTakeHit { get => _canTakeHit; set => _canTakeHit = value; }
     public bool IsInPain { get => _isInPain; set => _isInPain = value; }
     private bool _painCoroutine;
 
@@ -270,8 +273,14 @@ public class Arzued : MonoBehaviour
     public string Name { get => _name; }
     private float _health;
     public float Health { get => _health; }
+    private float _baseDamage;
+    public float BaseDamage { get => _baseDamage; }
 
 
+    // Character Variables
+
+    private float _damageModificator = 1;
+    public float DamageModificator { get => _damageModificator; set => _damageModificator = value; }
     private void Start()
     {
         Initialize();
@@ -292,6 +301,7 @@ public class Arzued : MonoBehaviour
     {
         _name = SObject.Name;
         _health = SObject.Health;
+        _baseDamage = SObject.BaseDamage;
     }
 
     private void StartGame()
@@ -461,7 +471,7 @@ public class Arzued : MonoBehaviour
             if (!IsDashing)
             {
                 ArzuedRigidbody2D.velocity = Vector2.zero;
-                ArzuedRigidbody2D.bodyType = RigidbodyType2D.Static;
+                //ArzuedRigidbody2D.bodyType = RigidbodyType2D.Static;
                 IsIdle = false;
                 CanMove = false;
                 IsMoving = false;
@@ -573,6 +583,25 @@ public class Arzued : MonoBehaviour
         CanDashAttack = true;
         StartCoroutine(DashController());
     }
+    // ATTACK ETC
+    internal void Attack()
+    {
+        if(ArzuedCollisionsScript.attackedEnemiesRight.Length!= 0 && arzuedDirection==Direction.RIGHT)
+        {
+            foreach(Collider2D enemy in ArzuedCollisionsScript.attackedEnemiesRight)
+            {
+                enemy.GetComponent<BaseEnemy>().TakeHit(BaseDamage * DamageModificator);
+            }
+        }
+        if (ArzuedCollisionsScript.attackedEnemiesLeft.Length != 0 && arzuedDirection == Direction.LEFT)
+        {
+            foreach (Collider2D enemy in ArzuedCollisionsScript.attackedEnemiesLeft)
+            {
+                enemy.GetComponent<BaseEnemy>().TakeHit(BaseDamage * DamageModificator);
+            }
+        }
+    }
+    // ENUMERATORS
     private IEnumerator DashController()
     {
         while (!IsDashAttacking)
@@ -631,9 +660,9 @@ public class Arzued : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Enemy") && _canTakeHit)
         {
-            TakeHit(collision);
-            HitPhysics();
-            EnemyHitPhysics(collision);
+            //TakeHit(collision);
+            //HitPhysics();
+            //EnemyHitPhysics(collision);
         }
         if (arzuedStatus == Status.DEAD && collision.gameObject.CompareTag("Enemy"))
         {
@@ -644,8 +673,8 @@ public class Arzued : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Enemy") && _canTakeHit)
         {
-            TakeHit(collision);
-            HitPhysics();
+            //TakeHit(collision);
+            //HitPhysics();
         }
         if (arzuedStatus == Status.DEAD && collision.gameObject.CompareTag("Enemy"))
         {
@@ -664,7 +693,7 @@ public class Arzued : MonoBehaviour
     //        Debug.Log("Routine ended");
     //    }
     //}
-    private void TakeHit(Collision2D collision) // add collision hit read
+    internal void TakeHit(Collision2D collision) // add collision hit read
     {
         if (!IsHurt)
         {
@@ -678,7 +707,17 @@ public class Arzued : MonoBehaviour
             IsHurt = true;
         }
     }
-    private void HitPhysics()
+    internal void TakeHit(float damage)
+    {
+        TakeDamage(damage);
+        IsIdle = false;
+        IsMoving = false;
+        IsFalling = false;
+        IsJumping = false;
+
+        IsHurt = true;
+    }
+    private void HitPhysics() //fix velocity for static body while attack (fixed? )
     {
         float bounce = 4f;
         if (!IsFalling)

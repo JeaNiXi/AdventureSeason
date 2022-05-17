@@ -5,8 +5,8 @@ using UnityEngine;
 public class BaseEnemy : MonoBehaviour
 {
     [SerializeField] EnemySObject sObject;
-    private enum DirectionEnum 
-    {   
+    internal enum DirectionEnum
+    {
         LEFT,
         RIGHT
     };
@@ -15,17 +15,23 @@ public class BaseEnemy : MonoBehaviour
         ALLOWED,
         RESTRICTED
     }
-    private enum BattleState
+    internal enum BattleState
     {
         ENABLED,
         DISABLED
     }
+    private enum State
+    {
+        ALIVE,
+        DEAD
+    }
 
     Coroutine SearchRoutine;
 
-    [SerializeField] private DirectionEnum ObjectDirection;
+    [SerializeField] internal DirectionEnum ObjectDirection;
     [SerializeField] private Movement ObjectMovement = Movement.ALLOWED;
-    [SerializeField] private BattleState ObjectBattleState = BattleState.DISABLED;
+    [SerializeField] internal BattleState ObjectBattleState = BattleState.DISABLED;
+    [SerializeField] private State ObjectState = State.ALIVE;
 
     [Space]
     [SerializeField] Transform Hero;
@@ -39,7 +45,7 @@ public class BaseEnemy : MonoBehaviour
     {
         get
         {
-            if(ObjectDirection==DirectionEnum.RIGHT)
+            if (ObjectDirection == DirectionEnum.RIGHT)
             {
                 return Vector2.right;
             }
@@ -55,9 +61,9 @@ public class BaseEnemy : MonoBehaviour
     Animator objAnimator;
     SpriteRenderer objSpriteRenderer;
     ObstaclesDetection objObstaclesDetectionScript;
+    CapsuleCollider2D objCapsuleCollider;
 
 
-    
 
     //
     /// <MovingBehaviour>
@@ -104,6 +110,9 @@ public class BaseEnemy : MonoBehaviour
     private float _collisionDamage;
     public float CollisionDamage { get => _collisionDamage; }
 
+    private float _attackDamage;
+    public float AttackDamage { get => _attackDamage; }
+
 
     // State Variables
     private bool _isMoving;
@@ -121,11 +130,21 @@ public class BaseEnemy : MonoBehaviour
     private bool _isSearching;
     public bool IsSearching { get => _isSearching; set => _isSearching = value; }
 
+    private bool _takeHitBool;
+    public bool TakeHitBool { get => _takeHitBool; set => _takeHitBool = value; }
+
+    private bool _setDead;
+    public bool SetDead { get => _setDead; set => _setDead = value; }
+
+
+
     // Code Variables
     private float _moveCoefficient = 1.0f;
     public float MoveCoefficient { get => _moveCoefficient; set => _moveCoefficient = value; }
-
+    private float _attackCoefficient = 1.0f;
+    public float AttackCoefficient { get => _attackCoefficient; set => _attackCoefficient = value; }
     private bool RoutineCheck;
+    private bool IsPushed;
     //6 Ground Layer 8 Player Layer
 
     int hitMask = (1 << 6) | (1 << 8);
@@ -136,6 +155,7 @@ public class BaseEnemy : MonoBehaviour
         objAnimator = gameObject.GetComponentInChildren<Animator>();
         objSpriteRenderer = gameObject.GetComponentInChildren<SpriteRenderer>();
         objObstaclesDetectionScript = gameObject.GetComponent<ObstaclesDetection>();
+        objCapsuleCollider = gameObject.GetComponent<CapsuleCollider2D>();
         InitSO();
     }
     private void InitSO()
@@ -151,9 +171,10 @@ public class BaseEnemy : MonoBehaviour
         _searchDuration = sObject.SearchDuration;
         _health = sObject.Health;
         _collisionDamage = sObject.CollisionDamage;
+        _attackDamage = sObject.AttackDamage;
 
         CanAttack = true;
-        
+
     }
 
     protected void SetSpriteDirection(Vector2 direction)
@@ -176,7 +197,7 @@ public class BaseEnemy : MonoBehaviour
     // Behaviour
     protected void MoveStandPatrol()
     {
-        if (ObjectBattleState == BattleState.DISABLED)
+        if (ObjectBattleState == BattleState.DISABLED && ObjectState == State.ALIVE)
         {
             if (ObjectMovement == Movement.ALLOWED && objObstaclesDetectionScript.IsGrounded)
             {
@@ -195,7 +216,7 @@ public class BaseEnemy : MonoBehaviour
     }
     protected void CheckForObstacles()
     {
-        if ((ObjectBattleState==BattleState.DISABLED || IsSearching) && objObstaclesDetectionScript.IsGrounded)
+        if ((ObjectBattleState == BattleState.DISABLED || IsSearching) && objObstaclesDetectionScript.IsGrounded)
         {
             if (objObstaclesDetectionScript.HasObstacleRight && objObstaclesDetectionScript.HasObstacleRightUp && !objObstaclesDetectionScript.HasObstacleLeft && ObjectDirection == DirectionEnum.RIGHT && ObjectMovement == Movement.ALLOWED)
             {
@@ -222,7 +243,7 @@ public class BaseEnemy : MonoBehaviour
                 StartCoroutine(WaitTimeSetDirectionAndMoveState(PatrolStandingTime, DirectionEnum.RIGHT, Movement.ALLOWED));
             }
         }
-        if(!objObstaclesDetectionScript.IsGrounded)
+        if (!objObstaclesDetectionScript.IsGrounded)
         {
             IsMoving = false;
         }
@@ -233,12 +254,12 @@ public class BaseEnemy : MonoBehaviour
     {
         // working -- RaycastHit2D rayHit = Physics2D.Linecast(FOVCastPoint.transform.position, new Vector2(FOVCastPoint.transform.position.x+_viewDistance, FOVCastPoint.transform.position.y), playerLayer);
         // working -- RaycastHit2D rayHit = Physics2D.Raycast(FOVCastPoint.transform.position, Direction, 10f, playerLayer);
-        RaycastHit2D rayHit = Physics2D.Raycast(FOVCastPoint.transform.position, Direction, ViewDistance, hitMask);
-        Debug.DrawRay(FOVCastPoint.transform.position, Direction * ViewDistance, Color.white);
-
-        if(rayHit.collider!=null && rayHit.collider.CompareTag("Ground"))
+        if (ObjectState == State.ALIVE)
         {
-            if (GameManager.Instance.GPState == GameManager.GlobalPlayerState.DEAD && ObjectBattleState == BattleState.ENABLED) 
+            RaycastHit2D rayHit = Physics2D.Raycast(FOVCastPoint.transform.position, Direction, ViewDistance, hitMask);
+            Debug.DrawRay(FOVCastPoint.transform.position, Direction * ViewDistance, Color.white);
+
+            if (GameManager.Instance.GPState == GameManager.GlobalPlayerState.DEAD && ObjectBattleState == BattleState.ENABLED)
             {
                 Debug.Log("Object dead, stopping");
                 if (RoutineCheck)
@@ -247,56 +268,53 @@ public class BaseEnemy : MonoBehaviour
                 }
                 FullyStopSearch();
             }
-            else
-            {
+            if (rayHit.collider != null && rayHit.collider.CompareTag("Ground"))
                 return;
-            }
-        }
-        else
         if (rayHit.collider != null && ObjectBattleState == BattleState.DISABLED)
-        {
-            ObjectBattleState = BattleState.ENABLED;
-            Debug.Log("Found Player");
-        }
-        if (rayHit.collider == null && ObjectBattleState == BattleState.ENABLED && !IsSearching) 
-        {
-            //ObjectBattleState = BattleState.DISABLED;
-            //MoveCoefficient = 1f;
-            //Debug.Log("Lost Player");
-            Debug.Log("Lost Player, started search.");
-            TryFindLostPlayer();
-        }
-        if(rayHit.collider!=null && ObjectBattleState == BattleState.ENABLED && IsSearching)
-        {
-            //if (_searchCoroutineRunning)
-            //{
+            {
+                ObjectBattleState = BattleState.ENABLED;
+                Debug.Log("Found Player");
+            }
+            if (rayHit.collider == null && ObjectBattleState == BattleState.ENABLED && !IsSearching)
+            {
+                //ObjectBattleState = BattleState.DISABLED;
+                //MoveCoefficient = 1f;
+                //Debug.Log("Lost Player");
+                Debug.Log("Lost Player, started search.");
+                TryFindLostPlayer();
+            }
+            if (rayHit.collider != null && ObjectBattleState == BattleState.ENABLED && IsSearching)
+            {
+                //if (_searchCoroutineRunning)
+                //{
                 Debug.Log("Object found Stopping Coroutine");
                 StopCoroutine(SearchRoutine);
                 FullyStopSearch();
+                //}
+            }
+            //if (ObjectBattleState == BattleState.ENABLED && !IsSearching && GameManager.Instance.GPState == GameManager.GlobalPlayerState.DEAD)
+            //{
+            //    Debug.Log("Object dead, stopping");
+            //    StopCoroutine(SearchRoutine);
+            //    FullyStopSearch();
             //}
         }
-        //if (ObjectBattleState == BattleState.ENABLED && !IsSearching && GameManager.Instance.GPState == GameManager.GlobalPlayerState.DEAD)
-        //{
-        //    Debug.Log("Object dead, stopping");
-        //    StopCoroutine(SearchRoutine);
-        //    FullyStopSearch();
-        //}
     }
 
     //Attack State
 
     protected void UpdateBattleState()
     {
-        if(ObjectBattleState==BattleState.ENABLED)
+        if (ObjectBattleState == BattleState.ENABLED && ObjectState == State.ALIVE)
         {
             RaycastHit2D rayAttackHit = Physics2D.Linecast(NearAttackCastPoint.transform.position, new Vector2(NearAttackCastPoint.transform.position.x + NearAttackDistance, NearAttackCastPoint.transform.position.y), playerLayer);
             if (rayAttackHit.collider != null && !IsAttacking && CanAttack)
             {
                 IsMoving = false;
                 CanAttack = false;
-                Attack(); 
+                Attack();
             }
-            if (rayAttackHit.collider == null && !IsAttacking)
+            if (rayAttackHit.collider == null && !IsAttacking && ObjectState == State.ALIVE)
                 TryCatchPlayer();
             else
             {
@@ -315,7 +333,7 @@ public class BaseEnemy : MonoBehaviour
         if (objObstaclesDetectionScript.IsGrounded)
         {
             IsMoving = true;
-            MoveCoefficient = 2.5f;
+            MoveCoefficient = 3f;
             objRigidBody.velocity = new Vector2(Direction.x * MoveSpeed * MoveCoefficient, objRigidBody.velocity.y);
             ChangeDirectionOnSearch();
         }
@@ -336,7 +354,7 @@ public class BaseEnemy : MonoBehaviour
         {
             ObjectDirection = DirectionEnum.RIGHT;
         }
-        else if (Hero.transform.position.x - gameObject.transform.position.x <-2 && objObstaclesDetectionScript.IsGrounded)
+        else if (Hero.transform.position.x - gameObject.transform.position.x < -2 && objObstaclesDetectionScript.IsGrounded)
         {
             ObjectDirection = DirectionEnum.LEFT;
         }
@@ -344,10 +362,18 @@ public class BaseEnemy : MonoBehaviour
     protected void Attack()
     {
         StartCoroutine(WaitBeforeCanAttack(AttackInterval));
-        if(!IsAttacking)
+        IsAttacking = true;
+        DoAttack1 = true;
+    }
+    public void OrganizeAttack()
+    {
+        if (objObstaclesDetectionScript.IsAttackingRight != null && ObjectDirection == DirectionEnum.RIGHT)
         {
-            IsAttacking = true;
-            DoAttack1 = true;
+            objObstaclesDetectionScript.IsAttackingRight.gameObject.GetComponent<Arzued>().TakeHit(AttackDamage * AttackCoefficient);
+        }
+        if (objObstaclesDetectionScript.IsAttackingLeft != null && ObjectDirection == DirectionEnum.LEFT)
+        {
+            objObstaclesDetectionScript.IsAttackingLeft.gameObject.GetComponent<Arzued>().TakeHit(AttackDamage * AttackCoefficient);
         }
     }
     private void FullyStopSearch()
@@ -356,13 +382,55 @@ public class BaseEnemy : MonoBehaviour
         IsSearching = false;
         MoveCoefficient = 1f;
     }
+
+    public void TakeHit(float damage)
+    {
+        TakeHitBool = true;
+        _health -= damage;
+        Debug.Log($"Goblin Health left {Health}");
+    }
+    protected void CheckStatus()
+    {
+        if (Health <= 0 && ObjectState == State.ALIVE)
+        {
+            SetDeadStatus();
+        }
+    }
+    protected void SetDeadStatus()
+    {
+        bool foundRot = false;
+        Quaternion _deathRotation = gameObject.transform.rotation;
+        SetDead = true;
+
+        RaycastHit2D deathHit = Physics2D.Raycast(gameObject.transform.position, Vector2.down, 50f);
+        if (deathHit.collider != null && deathHit.collider.gameObject.CompareTag("Ground"))
+        {
+            Debug.Log("FlundRotation");
+            foundRot = true;
+            _deathRotation = deathHit.collider.gameObject.transform.rotation;
+        }
+        if (foundRot && objObstaclesDetectionScript.IsGrounded)
+        {
+            ObjectState = State.DEAD;
+            objCapsuleCollider.enabled = false;
+            objRigidBody.bodyType = RigidbodyType2D.Static;
+            gameObject.transform.rotation = _deathRotation;
+        }
+        Debug.Log("IS Dead!");
+        //Destroy(gameObject);
+    }
+
+    public void DestoyEnemy()
+    {
+        Destroy(gameObject);
+    }
     //IEnumerators
     IEnumerator WaitTimeSetDirectionAndMoveState(float time, DirectionEnum direction, Movement moveState)
     {
-            yield return new WaitForSeconds(time);
-            ObjectDirection = direction;
-            ObjectMovement = moveState;
-            yield break;
+        yield return new WaitForSeconds(time);
+        ObjectDirection = direction;
+        ObjectMovement = moveState;
+        yield break;
     }
     IEnumerator WaitBeforeCanAttack(float time)
     {
@@ -370,6 +438,7 @@ public class BaseEnemy : MonoBehaviour
         CanAttack = true;
         yield break;
     }
+
     IEnumerator SearchCooldown(float duration)
     {
         RoutineCheck = true;
@@ -386,6 +455,8 @@ public class BaseEnemy : MonoBehaviour
     {
         objAnimator.SetBool("isMoving", IsMoving);
         objAnimator.SetBool("doAttack1", DoAttack1);
+        objAnimator.SetBool("takeHit", TakeHitBool);
+        objAnimator.SetBool("setDead", SetDead);
     }
 
     private void OnDrawGizmos()
