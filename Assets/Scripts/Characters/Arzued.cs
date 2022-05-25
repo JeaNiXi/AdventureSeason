@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Arzued : MonoBehaviour
 {
@@ -34,6 +35,12 @@ public class Arzued : MonoBehaviour
     [SerializeField] Status arzuedStatus = Status.ALIVE;
 
     Coroutine HitRoutine;
+
+    [SerializeField] private GameObject InventoryObj;
+    [SerializeField] private Slider HPSlider;
+    [SerializeField] private Gradient HPGradient;
+    [SerializeField] private Image HPImage;
+
     // Character vars.
     private float _moveSpeed = 10.0f;
     private float _jumpForce = 10.0f;
@@ -272,7 +279,7 @@ public class Arzued : MonoBehaviour
     private string _name;
     public string Name { get => _name; }
     private float _health;
-    public float Health { get => _health; }
+    public float Health { get => _health; set => _health = value; }
     private float _baseDamage;
     public float BaseDamage { get => _baseDamage; }
     private float _heavyDamage;
@@ -284,6 +291,9 @@ public class Arzued : MonoBehaviour
     public float DamageModificator { get => _damageModificator; set => _damageModificator = value; }
     private float _heavyDamageModificator = 1;
     public float HeavyDamageModificator { get => _heavyDamageModificator; set => _heavyDamageModificator = value; }
+    private float _maxHealth;
+    public float MaxHealth { get => _maxHealth; set => _maxHealth = value; }
+    
     private void Start()
     {
         Initialize();
@@ -297,6 +307,7 @@ public class Arzued : MonoBehaviour
         ArzuedAnimationScript = gameObject.GetComponentInChildren<ArzuedAnimations>();
         ArzuedCollisionsScript = gameObject.GetComponent<ArzuedCollisions>();
         InitSO();
+        InitHealthBar();
         StartGame();
     }
 
@@ -307,7 +318,18 @@ public class Arzued : MonoBehaviour
         _baseDamage = SObject.BaseDamage;
         _heavyDamage = SObject.HeavyDamage;
     }
-
+    private void InitHealthBar()
+    {
+        MaxHealth = Health;
+        UpdateHealthSlider();
+        HPImage.color = HPGradient.Evaluate(1f);
+    }
+    private void UpdateHealthSlider()
+    {
+        HPSlider.maxValue = MaxHealth;
+        HPSlider.value = Health;
+        HPImage.color = HPGradient.Evaluate(HPSlider.normalizedValue);
+    }
     private void StartGame()
     {
         _canMove = true;
@@ -316,10 +338,14 @@ public class Arzued : MonoBehaviour
 
     private void Update()
     {
+
         if (arzuedStatus == Status.ALIVE || !IsDead)
         {
             CheckHealthStatus();
+            //InventoryCheck();
+            UpdateHealthSlider();
         }
+
         // Input Controller Below
         if (arzuedMovement == Movement.RESTRICTED && arzuedStatus == Status.ALIVE)
         {
@@ -748,6 +774,23 @@ public class Arzued : MonoBehaviour
     ////
     ////// GAME MECHANICS BELOW
     ////
+    private void InventoryCheck()
+    {
+        if (Input.GetKeyDown(KeyCode.I) && !InventoryObj.activeSelf)
+        {
+            GameManager.Instance.PauseGame(true);
+            InventoryObj.SetActive(true);
+        }
+        else if(Input.GetKeyDown(KeyCode.I) && InventoryObj.activeSelf)
+        {
+            CloseInventory();
+        }
+    }
+    public void CloseInventory()
+    {
+        GameManager.Instance.PauseGame(false);
+        InventoryObj.SetActive(false);
+    }
     private void CheckHealthStatus()
     {
         if (Health <= 0)
@@ -802,7 +845,7 @@ public class Arzued : MonoBehaviour
     }
     private void TakeDamage(float damage)
     {
-        _health -= damage;
+        Health -= damage;
         Debug.Log($"Health Left {Health} ");
     }
 }
