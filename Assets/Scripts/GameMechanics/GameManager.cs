@@ -27,7 +27,8 @@ public class GameManager : MonoBehaviour
     public enum GlobalGameState
     {
         RUNNING,
-        PAUSED
+        PAUSED,
+        UIPAUSED
     }
 
     public GlobalPlayerState GPState = GlobalPlayerState.ALIVE;
@@ -35,17 +36,4 @@ public class GameManager : MonoBehaviour
 
     public Transform Arzued;
 
-    public void PauseGame(bool value)
-    {
-        if (value)
-        {
-            Time.timeScale = 0;
-            GGState = GlobalGameState.PAUSED;
-        }
-        else
-        {
-            Time.timeScale = 1;
-            GGState = GlobalGameState.RUNNING;
-        }
-    }
 }

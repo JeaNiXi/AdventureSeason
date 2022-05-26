@@ -774,23 +774,23 @@ public class Arzued : MonoBehaviour
     ////
     ////// GAME MECHANICS BELOW
     ////
-    private void InventoryCheck()
-    {
-        if (Input.GetKeyDown(KeyCode.I) && !InventoryObj.activeSelf)
-        {
-            GameManager.Instance.PauseGame(true);
-            InventoryObj.SetActive(true);
-        }
-        else if(Input.GetKeyDown(KeyCode.I) && InventoryObj.activeSelf)
-        {
-            CloseInventory();
-        }
-    }
-    public void CloseInventory()
-    {
-        GameManager.Instance.PauseGame(false);
-        InventoryObj.SetActive(false);
-    }
+    //private void InventoryCheck()
+    //{
+    //    if (Input.GetKeyDown(KeyCode.I) && !InventoryObj.activeSelf)
+    //    {
+    //        GameManager.Instance.PauseGame(true);
+    //        InventoryObj.SetActive(true);
+    //    }
+    //    else if(Input.GetKeyDown(KeyCode.I) && InventoryObj.activeSelf)
+    //    {
+    //        CloseInventory();
+    //    }
+    //}
+    //public void CloseInventory()
+    //{
+    //    GameManager.Instance.PauseGame(false);
+    //    InventoryObj.SetActive(false);
+    //}
     private void CheckHealthStatus()
     {
         if (Health <= 0)
