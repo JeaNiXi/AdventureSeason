@@ -35,5 +35,6 @@ public class GameManager : MonoBehaviour
     public GlobalGameState GGState = GlobalGameState.RUNNING;
 
     public Transform Arzued;
+    public GameObject mainCharacter;
 
 }

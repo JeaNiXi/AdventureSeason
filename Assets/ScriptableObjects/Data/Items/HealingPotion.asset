@@ -9,11 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7efa9e93cb26b114e94e9b02139add76, type: 3}
+  m_Script: {fileID: 11500000, guid: 7380349a39f37b948b35c4119406c4ff, type: 3}
   m_Name: HealingPotion
   m_EditorClassIdentifier: 
-  <IsStackable>k__BackingField: 0
-  <MaxStackSize>k__BackingField: 1
-  <Name>k__BackingField: Healing Potioni
-  <Description>k__BackingField: Besta Healing Potioni
+  <IsStackable>k__BackingField: 1
+  <MaxStackSize>k__BackingField: 99
+  <Name>k__BackingField: HelingPotion
+  <Description>k__BackingField: Helthe
   <ItemImage>k__BackingField: {fileID: 454403117, guid: 4250b79ad91ab8a4493a46e33eed78f0, type: 3}
+  <DefaultParametersList>k__BackingField: []
+  modifiersData:
+  - statModifier: {fileID: 11400000, guid: 82f91cbe0d9de544e8b87d210073aab0, type: 2}
+    value: 25
+  <actionSFX>k__BackingField: {fileID: 8300000, guid: 4e31ff7177efb724a97ebc9c42d3dd4b, type: 3}
